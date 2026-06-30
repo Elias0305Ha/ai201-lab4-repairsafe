@@ -43,53 +43,11 @@ Record every interaction — question, safety tier, and response preview — to 
 | `"tier"` | `str` | Safety tier assigned to this question |
 | `"question"` | `str` | The user's question, truncated to 300 characters |
 | `"response_preview"` | `str` | First 200 characters of the generated response |
-| `[your field]` | `[type]` | [description] |
-| `[your field]` | `[type]` | [description] |
+| `"reason"` | `str` | The classifier's explanation for the tier — needed to diagnose why a question got its tier when reviewing misclassifications |
+| `"model"` | `str` | Which LLM generated the result — needed to trace whether a model change caused a shift in classifications |
 
 ---
 
 ### Why these truncation limits?
 
 *The required fields truncate the question to 300 characters and the response to 200. Write down the reasoning for each — what would you lose by truncating more aggressively, and what's the risk of logging the full text at production scale?*
-
-```
-[your answer here]
-```
-
----
-
-### Directory creation
-
-*What happens if `logs/` doesn't exist when the function runs for the first time? How will you handle that — and why is this worth thinking about at all?*
-
-```
-[your answer here]
-```
-
----
-
-### Console output
-
-*Write an example of what you want the one-line terminal summary to look like after a question is logged. Be specific about format.*
-
-```
-[your example output here]
-```
-
----
-
-## Implementation Notes
-
-*Fill this in after implementing.*
-
-**The actual log file content after 3 test queries (paste the three JSON lines):**
-
-```
-[your answer here]
-```
-
-**One field you'd add to the log if this were a real production system handling 10,000 questions per day:**
-
-```
-[your answer here]
-```
