@@ -1,21 +1,53 @@
 # RepairSafe — Home Repair Safety Assistant
 
-**AI201 Lab 4 Starter Repository**
+RepairSafe is a home repair Q&A assistant with a safety layer built in front of it. Before it answers any question, it judges how dangerous the repair is and changes its response based on that — because not every repair should come with a confident "here's how."
 
-RepairSafe is a home repair Q&A tool with a safety classification layer. Before answering any question, it classifies the request into one of three safety tiers and adjusts its behavior accordingly.
+Built as part of the CodePath AI201 program.
+
+---
+
+## What it does
+
+Ask RepairSafe a home repair question. Instead of answering blindly, it runs the question through a three-stage pipeline:
+
+1. **Classify** — an LLM-as-judge reads the question and sorts it into one of three safety tiers.
+2. **Respond** — a different response strategy runs depending on the tier.
+3. **Log** — every interaction is recorded to an audit trail.
+
+### The three tiers
+
+| Tier | Meaning | Example | Response |
+|------|---------|---------|----------|
+| `safe` | Routine DIY, worst case is cosmetic | Patching a small drywall hole | Full step-by-step instructions |
+| `caution` | Doable, but a mistake has real cost | Replacing a kitchen faucet | Instructions with warnings built into the steps |
+| `refuse` | Fire / flood / structural / injury risk, or needs a permit | Fixing a suspected gas leak | No instructions — explains the danger and refers to a licensed pro |
+
+The hardest distinction is the **"replacing existing" vs. "adding new"** boundary in electrical work: replacing a dead outlet is `caution` (component swap on an existing circuit), but adding a new outlet is `refuse` (new wiring from the panel, a fire hazard if done wrong). The classifier is built to get this right.
+
+---
+
+## How it works
+
+**LLM-as-judge classifier.** The classifier doesn't talk to the user — it returns a structured tier (`safe` / `caution` / `refuse`) that the rest of the pipeline consumes. The prompt uses tier definitions plus few-shot examples to pin down the edge cases.
+
+**Fail-closed design.** If the classifier's output can't be parsed, or the tier isn't valid, the system falls back to `refuse` rather than `safe`. A frustrated user is a better failure than a hurt one.
+
+**Behavior-prohibiting refuse prompt.** The refuse responder doesn't just say "be safe" — it explicitly prohibits providing any steps, partial instructions, or "how a professional does it," and closes common jailbreak framings ("hypothetically," "for research," "I'm a licensed pro"). This stops the model from leaking dangerous instructions while sounding cautious.
+
+**Audit logging.** Every interaction is appended to `logs/audit.jsonl` in JSONL format (one JSON record per line) — timestamp, tier, question, and response preview — so the system's behavior can be reviewed after the fact.
 
 ---
 
 ## Setup
 
-1. Fork this repo and clone your fork locally
+1. Clone the repo
 2. Create and activate a virtual environment:
 
-   ```bash
+```bash
    python -m venv .venv
    source .venv/bin/activate   # Mac/Linux
    # or: .venv\Scripts\activate  # Windows
-   ```
+```
 
 3. Install dependencies: `pip install -r requirements.txt`
 4. Copy `.env.example` to `.env` and add your Groq API key
@@ -23,33 +55,4 @@ RepairSafe is a home repair Q&A tool with a safety classification layer. Before 
 
 ---
 
-## What to Implement
-
-| Milestone | File | Function | Description |
-|-----------|------|----------|-------------|
-| 1 | `safety.py` | `classify_safety_tier()` | Classify question into safe / caution / refuse |
-| 2 | `responder.py` | `generate_safe_response()` | Generate tier-appropriate response |
-| 3 | `auditor.py` | `log_interaction()` | Append interaction record to audit log |
-
-Complete each spec in `specs/` before implementing the corresponding function.
-
----
-
-## Repository Structure
-
-```
-ai201-lab4-repairsafe-starter/
-├── app.py              ← Gradio UI and pipeline orchestration (pre-built)
-├── safety.py           ← Milestone 1: safety tier classifier
-├── responder.py        ← Milestone 2: tier-aware response generator
-├── auditor.py          ← Milestone 3: audit logger
-├── config.py           ← constants (API key, model, log path, valid tiers)
-├── data/
-│   └── repair_tiers.md ← tier guide shown in the app's Tier Guide tab
-├── logs/               ← audit.jsonl written here after Milestone 3
-└── specs/
-    ├── system-design.md    ← read this first
-    ├── classifier-spec.md  ← Milestone 1 spec
-    ├── responder-spec.md   ← Milestone 2 spec
-    └── auditor-spec.md     ← Milestone 3 spec
-```
+## Repository structure
